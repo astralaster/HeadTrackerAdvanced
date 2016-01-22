@@ -162,5 +162,17 @@
                 android:id="@+id/textView_gyroscope_z"
                 android:layout_column="0" />
         </TableRow>
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <android.widget.Button
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="Start Sender"
+                android:id="@+id/buttonUdpStartStop">
+            </android.widget.Button>
+        </TableRow>
     </TableLayout>
+
 </RelativeLayout>

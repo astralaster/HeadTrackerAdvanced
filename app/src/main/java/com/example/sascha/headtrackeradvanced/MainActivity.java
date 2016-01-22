@@ -1,5 +1,6 @@
 package com.example.sascha.headtrackeradvanced;
 
+import android.content.Intent;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.os.Bundle;
@@ -16,19 +17,20 @@ import android.view.View.OnClickListener;
 
 import android.widget.TextView;
 
-import android.content.Intent;
-import android.net.Uri;
-
 import android.hardware.Sensor;
-import android.hardware.SensorEvent;
 import android.hardware.SensorManager;
 
 import android.content.Context;
 
+import com.example.sascha.headtrackeradvanced.services.UDPService;
+
+import java.io.IOException;
 import java.net.DatagramSocket;
 import java.net.DatagramPacket;
 import java.net.InetAddress;
-
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -38,6 +40,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private Sensor accelerometer;
     private Sensor gravity;
     private Sensor gyroscope;
+    private boolean serviceRunning;
+
+    UDPService sender;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -55,6 +60,9 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
+        sender = new UDPService();
+        serviceRunning = false;
+
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         gravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
@@ -63,6 +71,22 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mSensorManager.registerListener(this, accelerometer, 1);
         mSensorManager.registerListener(this, gravity, 1);
         mSensorManager.registerListener(this, gyroscope, 1);
+
+        final Button startStopButton = (Button) findViewById(R.id.buttonUdpStartStop);
+        startStopButton.setOnClickListener(new OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (serviceRunning) {
+                    stopService(new Intent(getBaseContext(), UDPService.class));
+                    startStopButton.setText("Start Sender");
+                    serviceRunning = false;
+                } else {
+                    startService(new Intent(getBaseContext(), UDPService.class));
+                    startStopButton.setText("Stop Sender");
+                    serviceRunning = true;
+                }
+            }
+        });
 
     }
 
@@ -92,52 +116,33 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public void onSensorChanged(SensorEvent event) {
 
-        if(event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+        if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
             ((TextView) findViewById(R.id.textView_accelerometer_x)).setText(String.valueOf(event.values[0]));
             ((TextView) findViewById(R.id.textView_accelerometer_y)).setText(String.valueOf(event.values[1]));
             ((TextView) findViewById(R.id.textView_accelerometer_z)).setText(String.valueOf(event.values[2]));
         }
 
-        if(event.sensor.getType() == Sensor.TYPE_GRAVITY) {
+        if (event.sensor.getType() == Sensor.TYPE_GRAVITY) {
             ((TextView) findViewById(R.id.textView_gravity_x)).setText(String.valueOf(event.values[0]));
             ((TextView) findViewById(R.id.textView_gravity_y)).setText(String.valueOf(event.values[1]));
             ((TextView) findViewById(R.id.textView_gravity_z)).setText(String.valueOf(event.values[2]));
         }
 
-        if(event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
+        if (event.sensor.getType() == Sensor.TYPE_GYROSCOPE) {
             ((TextView) findViewById(R.id.textView_gyroscope_x)).setText(String.valueOf(event.values[0]));
             ((TextView) findViewById(R.id.textView_gyroscope_y)).setText(String.valueOf(event.values[1]));
             ((TextView) findViewById(R.id.textView_gyroscope_z)).setText(String.valueOf(event.values[2]));
         }
-
-
-/*
-        String messageStr="Hello Android!";
-        int server_port = 5555;
-        DatagramSocket s;
-        InetAddress local;
-        try {
-            s = new DatagramSocket();
-        }catch(java.net.SocketException e){
-
-        }
-
-        try {
-            local = InetAddress.getByName("192.168.0.2");
-        }catch (java.net.UnknownHostException e){
-
-        }
-        int msg_length=messageStr.length();
-        byte[] message = messageStr.getBytes();
-        DatagramPacket p = new DatagramPacket(message, msg_length,local,server_port);
-        s.send(p);
-*/
-
-
     }
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        sender.stopService(new Intent(this, UDPService.class));
     }
 }
