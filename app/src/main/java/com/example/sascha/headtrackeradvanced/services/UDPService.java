@@ -19,22 +19,23 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class UDPService extends Service implements SensorEventListener {
     public static final String HOST = "192.168.2.52";   // Ip-Address of Receiver
     private static final int SEVER_PORT = 5555;         // Port of Receiver
-    public static final int VALUE_SIZE_IN_BYTE = 24;    // Temporary....
+    public static final int VALUE_SIZE_IN_BYTE = 52;    // Temporary....
 
     private InetAddress server;
     private DatagramSocket socket;
-    private float[] values;
+    private double[] values;
 
     Thread sender;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        values = new float[6];
+        values = new double[6];
 
         SensorManager mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         Sensor accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -57,9 +58,9 @@ public class UDPService extends Service implements SensorEventListener {
                     // Convert Values to Byte[]
                     ByteBuffer b;
                     while (!Thread.interrupted()) {
-                        b = ByteBuffer.allocate(VALUE_SIZE_IN_BYTE);
-                        for (float v : values) {
-                            b.putFloat(v);
+                        b = ByteBuffer.allocate(VALUE_SIZE_IN_BYTE).order(ByteOrder.LITTLE_ENDIAN);
+                        for (double v : values) {
+                            b.putDouble(v);
                         }
                         try {
                             socket.send(new DatagramPacket(b.array(), VALUE_SIZE_IN_BYTE, server, SEVER_PORT));
