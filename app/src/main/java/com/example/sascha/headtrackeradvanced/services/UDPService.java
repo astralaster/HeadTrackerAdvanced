@@ -8,7 +8,6 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
-import android.widget.TextView;
 
 import com.example.sascha.headtrackeradvanced.R;
 
@@ -22,14 +21,13 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
 public class UDPService extends Service implements SensorEventListener {
-    public static final String HOST = "192.168.2.52";   // Ip-Address of Receiver
-    private static final int SEVER_PORT = 5555;         // Port of Receiver
+    private String host;   // Ip-Address of Receiver
+    private int port;         // Port of Receiver
     public static final int VALUE_SIZE_IN_BYTE = 52;    // Temporary....
 
     private InetAddress server;
     private DatagramSocket socket;
     private double[] values;
-
     Thread sender;
 
     @Override
@@ -50,7 +48,7 @@ public class UDPService extends Service implements SensorEventListener {
             @Override
             public void run() {
                 try {
-                    server = InetAddress.getByName(HOST);
+                    server = InetAddress.getByName(host);
                 } catch (UnknownHostException e) {
                     e.printStackTrace();
                 }
@@ -63,7 +61,7 @@ public class UDPService extends Service implements SensorEventListener {
                             b.putDouble(v);
                         }
                         try {
-                            socket.send(new DatagramPacket(b.array(), VALUE_SIZE_IN_BYTE, server, SEVER_PORT));
+                            socket.send(new DatagramPacket(b.array(), VALUE_SIZE_IN_BYTE, server, port));
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
@@ -81,6 +79,8 @@ public class UDPService extends Service implements SensorEventListener {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         super.onStartCommand(intent, flags, startId);
+        host = intent.getStringExtra("ip");
+        port = intent.getIntExtra("port",0);
         try {
             socket = new DatagramSocket(5555);
         } catch (SocketException e) {

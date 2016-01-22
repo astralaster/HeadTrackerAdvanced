@@ -162,15 +162,39 @@
                 android:id="@+id/textView_gyroscope_z"
                 android:layout_column="0" />
         </TableRow>
+
+        <TableRow
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <android.widget.EditText
+                android:layout_width="0dip"
+                android:layout_height="50dip"
+                android:layout_weight="0.7"
+                android:text="127.0.0.1"
+                android:id="@+id/ip_address">
+            </android.widget.EditText>
+
+            <android.widget.EditText
+                android:layout_width="0dip"
+                android:layout_height="50dip"
+                android:layout_weight="0.3"
+                android:text="5555"
+                android:inputType="number"
+                android:id="@+id/port">
+            </android.widget.EditText>
+        </TableRow>
+
         <TableRow
             android:layout_width="match_parent"
             android:layout_height="match_parent">
 
             <android.widget.Button
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
+                android:layout_width="0dip"
+                android:layout_height="50dip"
+                android:layout_weight="1"
                 android:text="Start Sender"
-                android:id="@+id/buttonUdpStartStop">
+                android:id="@+id/startstopbutton">
             </android.widget.Button>
         </TableRow>
     </TableLayout>

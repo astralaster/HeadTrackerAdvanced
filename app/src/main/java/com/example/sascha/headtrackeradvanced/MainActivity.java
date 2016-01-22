@@ -4,10 +4,9 @@ import android.content.Intent;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.text.InputFilter;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,6 +14,7 @@ import android.view.MenuItem;
 import android.widget.Button;
 import android.view.View.OnClickListener;
 
+import android.widget.EditText;
 import android.widget.TextView;
 
 import android.hardware.Sensor;
@@ -23,14 +23,6 @@ import android.hardware.SensorManager;
 import android.content.Context;
 
 import com.example.sascha.headtrackeradvanced.services.UDPService;
-
-import java.io.IOException;
-import java.net.DatagramSocket;
-import java.net.DatagramPacket;
-import java.net.InetAddress;
-import java.net.SocketException;
-import java.net.UnknownHostException;
-import java.nio.ByteBuffer;
 
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
@@ -51,14 +43,32 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+        final EditText ipAddress = (EditText)findViewById(R.id.ip_address);
+        InputFilter[] filters = new InputFilter[1];
+        filters[0] = new InputFilter() {
             @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+            public CharSequence filter(CharSequence source, int start, int end,
+                                       android.text.Spanned dest, int dstart, int dend) {
+                if (end > start) {
+                    String destTxt = dest.toString();
+                    String resultingTxt = destTxt.substring(0, dstart) + source.subSequence(start, end) + destTxt.substring(dend);
+                    if (!resultingTxt.matches ("^\\d{1,3}(\\.(\\d{1,3}(\\.(\\d{1,3}(\\.(\\d{1,3})?)?)?)?)?)?")) {
+                        return "";
+                    } else {
+                        String[] splits = resultingTxt.split("\\.");
+                        for (int i=0; i<splits.length; i++) {
+                            if (Integer.valueOf(splits[i]) > 255) {
+                                return "";
+                            }
+                        }
+                    }
+                }
+                return null;
             }
-        });
+
+        };
+        ipAddress.setFilters(filters);
+        final EditText port = (EditText) findViewById(R.id.port);
 
         sender = new UDPService();
         serviceRunning = false;
@@ -72,7 +82,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         mSensorManager.registerListener(this, gravity, 1);
         mSensorManager.registerListener(this, gyroscope, 1);
 
-        final Button startStopButton = (Button) findViewById(R.id.buttonUdpStartStop);
+        final Button startStopButton = (Button) findViewById(R.id.startstopbutton);
         startStopButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -81,7 +91,10 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     startStopButton.setText("Start Sender");
                     serviceRunning = false;
                 } else {
-                    startService(new Intent(getBaseContext(), UDPService.class));
+                    Intent startIntent = new Intent(getBaseContext(), UDPService.class);
+                    startIntent.putExtra("ip",ipAddress.getText().toString());
+                    startIntent.putExtra("port",Integer.parseInt(port.getText().toString()));
+                    startService(startIntent);
                     startStopButton.setText("Stop Sender");
                     serviceRunning = true;
                 }
