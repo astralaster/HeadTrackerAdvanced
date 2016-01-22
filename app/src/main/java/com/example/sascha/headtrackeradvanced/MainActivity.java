@@ -28,7 +28,6 @@ import android.content.Context;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener {
 
-    Button button;
     int value;
     private SensorManager mSensorManager;
     private Sensor mSensor;
@@ -48,9 +47,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                         .setAction("Action", null).show();
             }
         });
-        addListenerOnButton();
-        TextView textView = (TextView) findViewById(R.id.textView_status);
-        textView.setText("not running");
 
         mSensorManager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
@@ -80,32 +76,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         return super.onOptionsItemSelected(item);
     }
 
-    public void addListenerOnButton() {
-
-        button = (Button) findViewById(R.id.button);
-
-        button.setOnClickListener(new OnClickListener() {
-
-            @Override
-            public void onClick(View arg0) {
-
-                //Intent browserIntent = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.google.de"));
-                //startActivity(browserIntent);
-            }
-
-        });
-
-    }
-
 
     @Override
     public void onSensorChanged(SensorEvent event) {
-        x = event.values[0];
-        y = event.values[1];
-        z = event.values[2];
 
-        TextView textView = (TextView) findViewById(R.id.textView_accelerometer_x);
-        textView.setText(String.valueOf());
+        ((TextView) findViewById(R.id.textView_accelerometer_x)).setText(String.valueOf(event.values[0]));
+        ((TextView) findViewById(R.id.textView_accelerometer_y)).setText(String.valueOf(event.values[1]));
+        ((TextView) findViewById(R.id.textView_accelerometer_z)).setText(String.valueOf(event.values[2]));
+
     }
 
     @Override
