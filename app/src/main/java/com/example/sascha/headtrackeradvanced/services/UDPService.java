@@ -8,6 +8,7 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.IBinder;
+import android.widget.TextView;
 
 import com.example.sascha.headtrackeradvanced.R;
 
@@ -39,10 +40,12 @@ public class UDPService extends Service implements SensorEventListener {
         Sensor accelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         Sensor gravity = mSensorManager.getDefaultSensor(Sensor.TYPE_GRAVITY);
         Sensor gyroscope = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+        Sensor rotation = mSensorManager.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR);
 
         mSensorManager.registerListener(this, accelerometer, 1);
         mSensorManager.registerListener(this, gravity, 1);
         mSensorManager.registerListener(this, gyroscope, 1);
+        mSensorManager.registerListener(this, rotation, 1);
 
         sender = new Thread(new Runnable() {
             @Override
@@ -104,7 +107,27 @@ public class UDPService extends Service implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         for (int i = 0; i < 3; i++) {
-            values[i] = event.values[i];
+            values[i] = 1;
+        }
+
+        if(event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR) {
+
+            float[] euler = new float[3];
+            float[] rMatrix = new float[9];
+            SensorManager.getRotationMatrixFromVector(rMatrix, event.values);
+            SensorManager.getOrientation(rMatrix, euler);
+
+            for (int i = 0; i < euler.length; i++){
+                euler[i] = Math.round(Math.toDegrees(euler[i]));
+            }
+
+            values[3] = euler[0];
+            values[4] = euler[1];
+            values[5] = euler[2];
+
+            //((TextView) findViewById(R.id.textView_rotation_x)).setText(String.valueOf(euler[0]));
+            //((TextView) findViewById(R.id.textView_rotation_y)).setText(String.valueOf(euler[1]));
+            //((TextView) findViewById(R.id.textView_rotation_z)).setText(String.valueOf(euler[2]));
         }
     }
 
